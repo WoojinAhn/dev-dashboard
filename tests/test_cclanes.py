@@ -7,7 +7,7 @@ from pathlib import Path
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import lately
+import cclanes as lately
 
 
 def test_load_config_empty():

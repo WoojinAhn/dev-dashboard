@@ -1,5 +1,5 @@
 [project]
-name = "lately"
+name = "cclanes"
 version = "0.1.0"
 description = "Per-repo 'what was I working on' CLI tool for parallel vibe coding"
 requires-python = ">=3.10"

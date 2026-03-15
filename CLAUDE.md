@@ -1,23 +1,24 @@
-# CLAUDE.md — dev-dashboard
+# CLAUDE.md — cclanes
 
 ## Overview
 
-~/home/ 하위 로컬 레포들의 현황을 한눈에 보는 개인 대시보드.
+~/home/ 하위 로컬 레포들의 현황을 한눈에 보는 CLI 도구.
 바이브 코딩 시 병렬 작업의 컨텍스트 전환 비용을 줄이는 것이 목적.
 
 ## Status
 
-v1 구현 완료. `lately` CLI로 레포별 작업 현황 요약 출력.
+v1 구현 완료. `cclanes` CLI로 레포별 작업 현황 요약 출력.
 
-## lately CLI
+## cclanes CLI
 
 ```bash
-python3 lately.py            # LLM 요약 포함 전체 스캔
-python3 lately.py --raw      # LLM 없이 raw 데이터
-python3 lately.py --days 7   # 최근 7일 내 활동만
+python3 cclanes.py            # LLM 요약 포함 전체 스캔
+python3 cclanes.py --raw      # LLM 없이 raw 데이터
+python3 cclanes.py --days 7   # 최근 7일 내 활동만
 ```
 
-Alias: `alias lately="python3 ~/home/dev-dashboard/lately.py"`
+Alias: `alias cclanes="python3 ~/home/cclanes/cclanes.py"`
+Slash command: `/lanes`
 
 ## Key Insight
 

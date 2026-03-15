@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""lately — per-repo 'what was I working on' CLI tool."""
+"""cclanes — per-repo 'what was I working on' CLI tool."""
 
 import argparse
 import hashlib
@@ -10,8 +10,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 HOME_DIR = Path.home() / "home"
-CONFIG_PATH = Path.home() / ".lately" / "config.json"
-CACHE_PATH = Path.home() / ".lately" / "cache.json"
+CONFIG_PATH = Path.home() / ".cclanes" / "config.json"
+CACHE_PATH = Path.home() / ".cclanes" / "cache.json"
 CLAUDE_PROJECTS_DIR = Path.home() / ".claude" / "projects"
 
 
@@ -160,7 +160,7 @@ def is_memo_valid(memo_mtime: datetime, last_activity: datetime | None) -> bool:
 
 def read_memo(repo_path: Path) -> tuple[str | None, datetime | None]:
     """Read .lately memo file. Returns (content, mtime) or (None, None)."""
-    memo_path = repo_path / ".lately"
+    memo_path = repo_path / ".cclanes"
     if not memo_path.exists():
         return None, None
     try:
@@ -465,7 +465,7 @@ def display_results(repos: list[dict], summaries: dict[str, str], raw: bool = Fa
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="lately",
+        prog="cclanes",
         description="Per-repo 'what was I working on' summaries.",
     )
     parser.add_argument("--days", type=int, default=None,
@@ -505,7 +505,7 @@ def main(argv: list[str] | None = None) -> None:
     # --memo: write memo file and exit
     if args.memo:
         repo_name, message = args.memo
-        memo_path = HOME_DIR / repo_name / ".lately"
+        memo_path = HOME_DIR / repo_name / ".cclanes"
         if not (HOME_DIR / repo_name).is_dir():
             print(f"오류: ~/home/{repo_name} 디렉토리가 없습니다.", file=sys.stderr)
             sys.exit(1)

@@ -1,6 +1,6 @@
 🇰🇷 [한국어](README.ko.md)
 
-# lately
+# cclanes
 
 > "What was I working on?" — A per-repo work summary CLI for parallel vibe coding.
 
@@ -13,11 +13,11 @@ Scan all your local repos, collect git activity + Claude Code session history + 
 ## Demo
 
 ```
-$ lately
+$ cclanes
 📋 캐시 19개 / 새 분석 2개
 레포                          마지막 활동        요약
 ──────────────────────────  ────────────  ────────────────────────────────────────
-dev-dashboard               방금            lately CLI 구현 완료
+cclanes               방금            cclanes CLI 구현 완료
 kr-whisky-tracker           11일 전         위스키 정렬 기능 구현
 GoPeaceTrain                10시간 전        한탄호텔 예약 모니터링 시작
 ```
@@ -44,30 +44,30 @@ GoPeaceTrain                10시간 전        한탄호텔 예약 모니터링
 
 ```bash
 # Clone
-git clone https://github.com/WoojinAhn/dev-dashboard.git
-cd dev-dashboard
+git clone https://github.com/WoojinAhn/cclanes.git
+cd cclanes
 
 # Run directly
-python lately.py
+python cclanes.py
 
 # Or add an alias
-echo 'alias lately="python ~/home/dev-dashboard/lately.py"' >> ~/.zshrc
+echo 'alias cclanes="python ~/home/cclanes/cclanes.py"' >> ~/.zshrc
 ```
 
 ### Usage
 
 ```bash
-lately                          # Full scan with LLM summaries
-lately --raw                    # No LLM, raw git + session data
-lately --days 7                 # Only repos active in last 7 days
-lately --memo <repo> "message"  # Save manual memo
-lately --exclude repo1,repo2    # Permanently exclude repos
-lately --include repo1          # Remove from exclusion
+cclanes                          # Full scan with LLM summaries
+cclanes --raw                    # No LLM, raw git + session data
+cclanes --days 7                 # Only repos active in last 7 days
+cclanes --memo <repo> "message"  # Save manual memo
+cclanes --exclude repo1,repo2    # Permanently exclude repos
+cclanes --include repo1          # Remove from exclusion
 ```
 
 ## Configuration
 
-### `~/.lately/config.json`
+### `~/.cclanes/config.json`
 
 ```json
 {
@@ -75,12 +75,12 @@ lately --include repo1          # Remove from exclusion
 }
 ```
 
-### `.lately` memo files
+### `.cclanes` memo files
 
-Drop a `.lately` file in any repo to attach a manual note:
+Drop a `.cclanes` file in any repo to attach a manual note:
 
 ```bash
-lately --memo my-repo "Waiting for API review"
+cclanes --memo my-repo "Waiting for API review"
 ```
 
 Memos are valid when written within 15 minutes of the last git commit or Claude session activity. Stale memos are ignored (not deleted) and the LLM summary is used instead.
@@ -92,7 +92,7 @@ Memos are valid when written within 15 minutes of the last git commit or Claude 
      │
      ├── git log / status ──────┐
      ├── Claude Code sessions ──┤──→ Cache (skip unchanged) ──→ Claude Haiku ──→ Summary Table
-     └── .lately memos ─────────┘
+     └── .cclanes memos ─────────┘
 ```
 
 1. **Scan** — Walk `~/home/` subdirectories, identify git repos
@@ -108,7 +108,7 @@ Memos are valid when written within 15 minutes of the last git commit or Claude 
 | Language | Python 3.10+ (stdlib only) |
 | LLM | Claude Haiku via `claude` CLI |
 | Data sources | git, Claude Code sessions, manual memos |
-| Storage | JSON file cache (`~/.lately/cache.json`) |
+| Storage | JSON file cache (`~/.cclanes/cache.json`) |
 
 ## License
 

@@ -1,6 +1,6 @@
 🇺🇸 [English](README.md)
 
-# lately
+# cclanes
 
 > "지금 뭘 하고 있었지?" — 병렬 바이브코딩을 위한 레포별 작업 요약 CLI
 
@@ -13,11 +13,11 @@
 ## Demo
 
 ```
-$ lately
+$ cclanes
 📋 캐시 19개 / 새 분석 2개
 레포                          마지막 활동        요약
 ──────────────────────────  ────────────  ────────────────────────────────────────
-dev-dashboard               방금            lately CLI 구현 완료
+cclanes               방금            cclanes CLI 구현 완료
 kr-whisky-tracker           11일 전         위스키 정렬 기능 구현
 GoPeaceTrain                10시간 전        한탄호텔 예약 모니터링 시작
 ```
@@ -42,28 +42,28 @@ GoPeaceTrain                10시간 전        한탄호텔 예약 모니터링
 
 ```bash
 # 클론
-git clone https://github.com/WoojinAhn/dev-dashboard.git
-cd dev-dashboard
+git clone https://github.com/WoojinAhn/cclanes.git
+cd cclanes
 
 # alias 등록 (선택)
-echo 'alias lately="python3 ~/home/dev-dashboard/lately.py"' >> ~/.zshrc
+echo 'alias cclanes="python3 ~/home/cclanes/cclanes.py"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
 ### 사용법
 
 ```bash
-lately                          # LLM 요약 포함 전체 스캔
-lately --raw                    # LLM 없이 raw 데이터
-lately --days 7                 # 최근 7일 내 활동만
-lately --memo <repo> "message"  # 수동 메모 저장
-lately --exclude repo1,repo2    # 영구 제외
-lately --include repo1          # 제외 해제
+cclanes                          # LLM 요약 포함 전체 스캔
+cclanes --raw                    # LLM 없이 raw 데이터
+cclanes --days 7                 # 최근 7일 내 활동만
+cclanes --memo <repo> "message"  # 수동 메모 저장
+cclanes --exclude repo1,repo2    # 영구 제외
+cclanes --include repo1          # 제외 해제
 ```
 
 ## 설정
 
-### `~/.lately/config.json`
+### `~/.cclanes/config.json`
 
 영구 제외 레포 목록 등 설정이 저장됩니다.
 
@@ -73,9 +73,9 @@ lately --include repo1          # 제외 해제
 }
 ```
 
-### `.lately` 메모 파일
+### `.cclanes` 메모 파일
 
-`--memo`로 저장한 메모는 각 레포 루트에 `.lately` 파일로 생성됩니다. 15분이 지나면 자동으로 무시됩니다.
+`--memo`로 저장한 메모는 각 레포 루트에 `.cclanes` 파일로 생성됩니다. 15분이 지나면 자동으로 무시됩니다.
 
 ## 작동 원리
 
@@ -84,7 +84,7 @@ lately --include repo1          # 제외 해제
     │
     ├─ git log / status ──────┐
     ├─ Claude Code 세션 히스토리 ┤──→ 캐시 (변경 감지) ──→ claude CLI (Haiku) ──→ 정렬된 테이블 출력
-    └─ .lately 수동 메모 ──────┘
+    └─ .cclanes 수동 메모 ──────┘
 ```
 
 1. `~/home/` 하위 디렉토리를 스캔하여 Git 레포를 식별
