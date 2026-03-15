@@ -8,15 +8,15 @@ When vibe coding across 10+ Ghostty terminal windows, coming back after a day or
 
 ## Solution
 
-A single CLI command `lately` that scans `~/home/*`, collects git + Claude Code session data per repo, and outputs a one-line summary for each — sorted by last activity.
+A single CLI command `lately` that scans `~/home/*`, collects git + Claude Code session data per repo, and outputs a one-line summary for each — sorted by last activity. "Last activity" = `max(last_commit_date, claude_session_mtime, .lately_mtime)`, whichever is most recent.
 
 ## Usage
 
 ```bash
-lately                          # Scan all repos, show summaries sorted by last activity
+lately                          # Scan all repos, show summaries sorted by last activity (no day limit)
 lately --days 7                 # Only repos with activity in the last 7 days
 lately --raw                    # No LLM summary — raw git + session title only (fast/offline)
-lately --memo <repo> "message"  # Save a manual memo to the repo's .lately file
+lately --memo <repo> "message"  # Save a manual memo (<repo> = directory name under ~/home/)
 lately --exclude repo1,repo2    # Permanently exclude repos (saved to config)
 lately --include repo1          # Remove repos from permanent exclusion
 ```
@@ -39,7 +39,7 @@ tab-labeler             20일 전      초기 설정 완료, 미커밋 변경 �
 - Plain text, one-liner describing current work status.
 - Displayed with `[memo]` prefix, replaces LLM summary.
 
-**Validity rule**: `.lately` mtime must be within 15 minutes of `max(last Claude session activity, last git commit)`. If stale, the memo is ignored (not deleted) and LLM summary is used instead.
+**Validity rule**: `.lately` mtime must be within 15 minutes of `max(last Claude session activity, last git commit)`. If stale, the memo is ignored (not deleted) and LLM summary is used instead. If neither Claude session nor git commit exists (new/empty repo), the memo is always considered valid.
 
 ### 2. Claude Code session history
 
@@ -66,6 +66,8 @@ has_remote          # git remote (non-empty = True)
 - Sent to `claude -p --model haiku` in one call.
 - Prompt asks for a one-line Korean summary per repo.
 - Repos with valid `.lately` memos are excluded from the LLM call.
+- Per-repo data is truncated to ~500 chars to stay within context limits.
+- If total payload exceeds a reasonable threshold, split into multiple calls.
 
 ## Configuration
 
@@ -77,8 +79,9 @@ File: `~/.lately/config.json`
 }
 ```
 
-- `--exclude` adds to the list and prints confirmation.
-- `--include` removes from the list and prints confirmation.
+- `--exclude` adds to the list, prints confirmation, and exits (no scan).
+- `--include` removes from the list, prints confirmation, and exits (no scan).
+- `--memo` writes the memo file and exits (no scan).
 
 ## Error Handling
 
@@ -89,6 +92,7 @@ File: `~/.lately/config.json`
 | No Claude session for a repo | Summarize from git data only |
 | No matching `~/.claude/projects/` dir | Summarize from git data only |
 | Haiku call fails (network, etc.) | Fallback to `--raw` output + warning |
+| JSONL parsing fails (format change, etc.) | Skip Claude session data, use git data only + warning |
 
 ## Project Structure
 
