@@ -206,3 +206,45 @@ def test_memo_invalid_activity_much_later():
         memo_mtime=now - timedelta(days=1),
         last_activity=now,
     ) is False
+
+
+# --- Output formatting tests ---
+
+def test_format_relative_time():
+    """Formats datetime as relative time string."""
+    now = datetime.now(tz=timezone.utc)
+    assert lately.format_relative_time(now - timedelta(minutes=30), now) == "30분 전"
+    assert lately.format_relative_time(now - timedelta(hours=3), now) == "3시간 전"
+    assert lately.format_relative_time(now - timedelta(days=2), now) == "2일 전"
+    assert lately.format_relative_time(now - timedelta(days=14), now) == "2주 전"
+
+
+def test_build_raw_summary():
+    """Builds raw summary string from repo data."""
+    repo = {
+        "name": "myrepo",
+        "git": {"branch": "main", "last_commit_msg": "fix bug", "dirty_count": 2,
+                "last_commit_date": datetime.now(tz=timezone.utc), "has_remote": True},
+        "claude": {"custom_title": "fixing-login", "last_user_msg": None,
+                   "last_assistant_msg": None, "mtime": datetime.now(tz=timezone.utc)},
+        "memo": None,
+        "last_activity": datetime.now(tz=timezone.utc),
+    }
+    summary = lately.build_raw_summary(repo)
+    assert "fix bug" in summary
+    assert "fixing-login" in summary
+
+
+def test_build_raw_summary_with_memo():
+    """Memo overrides other summary content."""
+    repo = {
+        "name": "myrepo",
+        "git": {"branch": "main", "last_commit_msg": "fix bug", "dirty_count": 0,
+                "last_commit_date": datetime.now(tz=timezone.utc), "has_remote": True},
+        "claude": None,
+        "memo": "작업 중단, PR 리뷰 대기",
+        "last_activity": datetime.now(tz=timezone.utc),
+    }
+    summary = lately.build_raw_summary(repo)
+    assert "[memo]" in summary
+    assert "작업 중단" in summary

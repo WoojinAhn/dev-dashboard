@@ -226,6 +226,51 @@ def scan_repos(
     return repos
 
 
+def format_relative_time(dt: datetime, now: datetime | None = None) -> str:
+    """Format datetime as Korean relative time string."""
+    if now is None:
+        now = datetime.now(tz=timezone.utc)
+    diff = now - dt
+    seconds = int(diff.total_seconds())
+    if seconds < 60:
+        return "방금"
+    minutes = seconds // 60
+    if minutes < 60:
+        return f"{minutes}분 전"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours}시간 전"
+    days = hours // 24
+    if days < 14:
+        return f"{days}일 전"
+    weeks = days // 7
+    if weeks < 8:
+        return f"{weeks}주 전"
+    months = days // 30
+    return f"{months}개월 전"
+
+
+def build_raw_summary(repo: dict) -> str:
+    """Build a raw (no-LLM) summary string for a repo."""
+    if repo["memo"]:
+        return f"[memo] {repo['memo']}"
+
+    parts = []
+    git = repo["git"]
+    claude = repo.get("claude")
+
+    if claude and claude.get("custom_title"):
+        parts.append(f"세션: {claude['custom_title']}")
+
+    if git["last_commit_msg"]:
+        parts.append(f"커밋: {git['last_commit_msg']}")
+
+    if git["dirty_count"] > 0:
+        parts.append(f"미커밋 {git['dirty_count']}개")
+
+    return ", ".join(parts) if parts else "(활동 없음)"
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="lately",
