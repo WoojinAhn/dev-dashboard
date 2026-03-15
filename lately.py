@@ -4,10 +4,12 @@
 import argparse
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 HOME_DIR = Path.home() / "home"
 CONFIG_PATH = Path.home() / ".lately" / "config.json"
+CLAUDE_PROJECTS_DIR = Path.home() / ".claude" / "projects"
 
 
 def load_config(path: Path = CONFIG_PATH) -> dict:
@@ -31,6 +33,77 @@ def add_excludes(cfg: dict, repos: list[str]) -> dict:
 def remove_excludes(cfg: dict, repos: list[str]) -> dict:
     cfg["exclude"] = [r for r in cfg["exclude"] if r not in repos]
     return cfg
+
+
+def find_claude_session(projects_dir: Path, repo_name: str) -> Path | None:
+    """Find the most recently modified JSONL file for a repo."""
+    for d in projects_dir.iterdir():
+        if d.is_dir() and d.name.endswith(f"-{repo_name}"):
+            jsonl_files = sorted(d.glob("*.jsonl"), key=lambda f: f.stat().st_mtime)
+            return jsonl_files[-1] if jsonl_files else None
+    return None
+
+
+def parse_claude_session(jsonl_path: Path) -> dict | None:
+    """Parse a Claude Code session JSONL file.
+
+    Returns dict with custom_title, last_user_msg, last_assistant_msg, mtime.
+    Returns None if file is empty or unparseable.
+    """
+    custom_title = None
+    last_user_msg = None
+    last_assistant_msg = None
+
+    try:
+        text = jsonl_path.read_text(encoding="utf-8")
+        if not text.strip():
+            return None
+
+        for line in text.splitlines():
+            if not line.strip():
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            msg_type = obj.get("type")
+
+            if msg_type == "custom-title":
+                custom_title = obj.get("customTitle")
+
+            elif msg_type == "user":
+                content = obj.get("message", {}).get("content", [])
+                if isinstance(content, list):
+                    for c in content:
+                        if isinstance(c, dict) and c.get("type") == "text":
+                            text_val = c["text"][:200]
+                            # Skip system/skill messages
+                            if not text_val.startswith("Base directory"):
+                                last_user_msg = text_val
+                            break
+
+            elif msg_type == "assistant":
+                content = obj.get("message", {}).get("content", [])
+                if isinstance(content, list):
+                    for c in content:
+                        if isinstance(c, dict) and c.get("type") == "text":
+                            last_assistant_msg = c["text"][:200]
+                            break
+
+    except (OSError, UnicodeDecodeError) as e:
+        print(f"⚠ 세션 파일 읽기 실패: {jsonl_path.name} ({e})", file=sys.stderr)
+        return None
+
+    if last_user_msg is None and last_assistant_msg is None and custom_title is None:
+        return None
+
+    return {
+        "custom_title": custom_title,
+        "last_user_msg": last_user_msg,
+        "last_assistant_msg": last_assistant_msg,
+        "mtime": datetime.fromtimestamp(jsonl_path.stat().st_mtime, tz=timezone.utc),
+    }
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
