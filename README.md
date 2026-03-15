@@ -22,6 +22,10 @@ kr-whisky-tracker           11일 전         위스키 정렬 기능 구현
 GoPeaceTrain                10시간 전        한탄호텔 예약 모니터링 시작
 ```
 
+## Why "lanes"?
+
+Like lanes in a swimming pool — each repo is a lane, and the work inside (Claude Code sessions, commits, branches) is the swimmer training in it. You're the coach on the poolside: cclanes is your scoreboard, showing every lane's progress at a glance so you know exactly where to focus next.
+
 ## Features
 
 - 🔍 **Auto-scan** — Discovers all repos under `~/home/*` automatically
@@ -64,6 +68,36 @@ cclanes --memo <repo> "message"  # Save manual memo
 cclanes --exclude repo1,repo2    # Permanently exclude repos
 cclanes --include repo1          # Remove from exclusion
 ```
+
+## Claude Code Slash Command
+
+You can register cclanes as a `/lanes` slash command in Claude Code:
+
+```bash
+# Create the command file
+mkdir -p ~/.claude/commands
+cat > ~/.claude/commands/lanes.md << 'EOF'
+---
+description: Show per-repo "what was I working on" summaries across ~/home/
+argument-hint: [--raw] [--days N]
+allowed-tools: Bash
+---
+
+Run the `cclanes` CLI to show per-repo work summaries.
+
+Flags (passed as-is to the script):
+- `--raw`: No LLM summary — show raw git + session data only (fast)
+- `--days N`: Only show repos with activity in the last N days
+
+```bash
+python3 ~/home/cclanes/cclanes.py $ARGUMENTS 2>&1
+```
+
+After the command completes, present the output as-is to the user.
+EOF
+```
+
+Then type `/lanes` in any Claude Code session to run it.
 
 ## Configuration
 

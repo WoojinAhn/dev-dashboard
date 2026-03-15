@@ -22,6 +22,10 @@ kr-whisky-tracker           11일 전         위스키 정렬 기능 구현
 GoPeaceTrain                10시간 전        한탄호텔 예약 모니터링 시작
 ```
 
+## Why "lanes"?
+
+수영장의 레인처럼 — 각 레포는 하나의 레인이고, 그 안의 작업(Claude Code 세션, 커밋, 브랜치)은 훈련 중인 선수입니다. 당신은 풀사이드의 감독이고, cclanes는 전광판입니다. 모든 레인의 진행 상황을 한눈에 보여줘서, 다음에 어디에 집중할지 바로 판단할 수 있습니다.
+
 ## Features
 
 - 🔍 **레포 자동 스캔** — `~/home/*` 하위 Git 레포를 자동으로 탐색
@@ -60,6 +64,36 @@ cclanes --memo <repo> "message"  # 수동 메모 저장
 cclanes --exclude repo1,repo2    # 영구 제외
 cclanes --include repo1          # 제외 해제
 ```
+
+## Claude Code 슬래시 커맨드
+
+cclanes를 Claude Code의 `/lanes` 슬래시 커맨드로 등록할 수 있습니다:
+
+```bash
+# 커맨드 파일 생성
+mkdir -p ~/.claude/commands
+cat > ~/.claude/commands/lanes.md << 'EOF'
+---
+description: Show per-repo "what was I working on" summaries across ~/home/
+argument-hint: [--raw] [--days N]
+allowed-tools: Bash
+---
+
+Run the `cclanes` CLI to show per-repo work summaries.
+
+Flags (passed as-is to the script):
+- `--raw`: No LLM summary — show raw git + session data only (fast)
+- `--days N`: Only show repos with activity in the last N days
+
+```bash
+python3 ~/home/cclanes/cclanes.py $ARGUMENTS 2>&1
+```
+
+After the command completes, present the output as-is to the user.
+EOF
+```
+
+이후 Claude Code 세션에서 `/lanes`를 입력하면 실행됩니다.
 
 ## 설정
 
