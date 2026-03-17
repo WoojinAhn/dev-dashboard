@@ -320,8 +320,9 @@ def format_relative_time(dt: datetime, now: datetime | None = None, lang: str = 
     return s["months_ago"].format(n=months)
 
 
-def build_raw_summary(repo: dict) -> str:
+def build_raw_summary(repo: dict, lang: str = "en") -> str:
     """Build a raw (no-LLM) summary string for a repo."""
+    s = STRINGS[lang]
     if repo["memo"]:
         return f"[memo] {repo['memo']}"
 
@@ -330,15 +331,15 @@ def build_raw_summary(repo: dict) -> str:
     claude = repo.get("claude")
 
     if claude and claude.get("custom_title"):
-        parts.append(f"세션: {claude['custom_title']}")
+        parts.append(f"{s['session_prefix']}: {claude['custom_title']}")
 
     if git["last_commit_msg"]:
-        parts.append(f"커밋: {git['last_commit_msg']}")
+        parts.append(f"{s['commit_prefix']}: {git['last_commit_msg']}")
 
     if git["dirty_count"] > 0:
-        parts.append(f"미커밋 {git['dirty_count']}개")
+        parts.append(s["uncommitted"].format(n=git["dirty_count"]))
 
-    return ", ".join(parts) if parts else "(활동 없음)"
+    return ", ".join(parts) if parts else s["no_activity"]
 
 
 def compute_cache_key(repo: dict) -> str:

@@ -247,7 +247,7 @@ def test_build_raw_summary():
         "memo": None,
         "last_activity": datetime.now(tz=timezone.utc),
     }
-    summary = lately.build_raw_summary(repo)
+    summary = lately.build_raw_summary(repo, lang="ko")
     assert "fix bug" in summary
     assert "fixing-login" in summary
 
@@ -262,9 +262,40 @@ def test_build_raw_summary_with_memo():
         "memo": "작업 중단, PR 리뷰 대기",
         "last_activity": datetime.now(tz=timezone.utc),
     }
-    summary = lately.build_raw_summary(repo)
+    summary = lately.build_raw_summary(repo, lang="ko")
     assert "[memo]" in summary
     assert "작업 중단" in summary
+
+
+def test_build_raw_summary_en():
+    """English raw summary uses English labels."""
+    repo = {
+        "name": "myrepo",
+        "git": {"branch": "main", "last_commit_msg": "fix bug", "dirty_count": 2,
+                "last_commit_date": datetime.now(tz=timezone.utc), "has_remote": True},
+        "claude": {"custom_title": "fixing-login", "last_user_msg": None,
+                   "last_assistant_msg": None, "mtime": datetime.now(tz=timezone.utc)},
+        "memo": None,
+        "last_activity": datetime.now(tz=timezone.utc),
+    }
+    summary = lately.build_raw_summary(repo, lang="en")
+    assert "session: fixing-login" in summary
+    assert "commit: fix bug" in summary
+    assert "2 uncommitted" in summary
+
+
+def test_build_raw_summary_no_activity_en():
+    """No activity shows English message."""
+    repo = {
+        "name": "empty",
+        "git": {"branch": "main", "last_commit_msg": None, "dirty_count": 0,
+                "last_commit_date": None, "has_remote": False},
+        "claude": None,
+        "memo": None,
+        "last_activity": None,
+    }
+    summary = lately.build_raw_summary(repo, lang="en")
+    assert summary == "(no activity)"
 
 
 # --- LLM payload tests ---
