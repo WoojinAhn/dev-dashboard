@@ -14,12 +14,12 @@ Scan all your local repos, collect git activity + Claude Code session history + 
 
 ```
 $ cclanes
-📋 캐시 19개 / 새 분석 2개
-레포                          마지막 활동        요약
+📋 cache 19 / new 2
+Repo                        Last Active   Summary
 ──────────────────────────  ────────────  ────────────────────────────────────────
-cclanes               방금            cclanes CLI 구현 완료
-kr-whisky-tracker           11일 전         위스키 정렬 기능 구현
-GoPeaceTrain                10시간 전        한탄호텔 예약 모니터링 시작
+cclanes                     just now      cclanes CLI implementation complete
+kr-whisky-tracker           11d ago       Whisky sorting feature implemented
+GoPeaceTrain                10h ago       Hotel reservation monitoring started
 ```
 
 ## Why "lanes"?
@@ -64,10 +64,14 @@ echo 'alias cclanes="python ~/home/cclanes/cclanes.py"' >> ~/.zshrc
 cclanes                          # Full scan with LLM summaries
 cclanes --raw                    # No LLM, raw git + session data
 cclanes --days 7                 # Only repos active in last 7 days
+cclanes --lang en                # Force English output
+cclanes --lang ko                # Force Korean output
 cclanes --memo <repo> "message"  # Save manual memo
 cclanes --exclude repo1,repo2    # Permanently exclude repos
 cclanes --include repo1          # Remove from exclusion
 ```
+
+> **Language:** Output language is auto-detected from your system locale. Use `--lang` to override.
 
 ## Claude Code Slash Command
 
@@ -79,7 +83,7 @@ mkdir -p ~/.claude/commands
 cat > ~/.claude/commands/lanes.md << 'EOF'
 ---
 description: Show per-repo "what was I working on" summaries across ~/home/
-argument-hint: [--raw] [--days N]
+argument-hint: [--raw] [--days N] [--lang en|ko]
 allowed-tools: Bash
 ---
 
@@ -88,6 +92,7 @@ Run the `cclanes` CLI to show per-repo work summaries.
 Flags (passed as-is to the script):
 - `--raw`: No LLM summary — show raw git + session data only (fast)
 - `--days N`: Only show repos with activity in the last N days
+- `--lang en|ko`: Output language (default: auto-detect from system locale)
 
 ```bash
 python3 ~/home/cclanes/cclanes.py $ARGUMENTS 2>&1

@@ -60,10 +60,14 @@ source ~/.zshrc
 cclanes                          # LLM 요약 포함 전체 스캔
 cclanes --raw                    # LLM 없이 raw 데이터
 cclanes --days 7                 # 최근 7일 내 활동만
+cclanes --lang en                # 영어 출력 강제
+cclanes --lang ko                # 한국어 출력 강제
 cclanes --memo <repo> "message"  # 수동 메모 저장
 cclanes --exclude repo1,repo2    # 영구 제외
 cclanes --include repo1          # 제외 해제
 ```
+
+> **언어:** 시스템 로케일에서 자동 감지됩니다. `--lang`으로 오버라이드 가능.
 
 ## Claude Code 슬래시 커맨드
 
@@ -75,7 +79,7 @@ mkdir -p ~/.claude/commands
 cat > ~/.claude/commands/lanes.md << 'EOF'
 ---
 description: Show per-repo "what was I working on" summaries across ~/home/
-argument-hint: [--raw] [--days N]
+argument-hint: [--raw] [--days N] [--lang en|ko]
 allowed-tools: Bash
 ---
 
@@ -84,6 +88,7 @@ Run the `cclanes` CLI to show per-repo work summaries.
 Flags (passed as-is to the script):
 - `--raw`: No LLM summary — show raw git + session data only (fast)
 - `--days N`: Only show repos with activity in the last N days
+- `--lang en|ko`: Output language (default: auto-detect from system locale)
 
 ```bash
 python3 ~/home/cclanes/cclanes.py $ARGUMENTS 2>&1
