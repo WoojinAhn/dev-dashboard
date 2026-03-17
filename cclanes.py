@@ -424,19 +424,29 @@ def build_llm_payload(repos: list[dict]) -> list[dict]:
     return payload
 
 
-def _call_llm(payload: list[dict]) -> dict[str, str]:
+def _call_llm(payload: list[dict], lang: str = "en") -> dict[str, str]:
     """Call claude -p --model haiku with a payload. Returns repo→summary dict."""
     if not payload:
         return {}
 
-    prompt = (
-        "다음 JSON은 여러 로컬 Git 레포의 최근 활동 데이터입니다.\n"
-        "각 레포별로 \"지금 뭘 하고 있었는지\"를 한 줄(30자 이내)로 요약해주세요.\n"
-        "커밋 메시지, 세션 타이틀, 마지막 대화 내용을 종합해서 판단하세요.\n\n"
-        "출력 형식 (JSON만, 다른 텍스트 없이):\n"
-        "{\"repo_name\": \"요약\", ...}\n\n"
-        f"데이터:\n{json.dumps(payload, ensure_ascii=False)}"
-    )
+    if lang == "ko":
+        prompt = (
+            "다음 JSON은 여러 로컬 Git 레포의 최근 활동 데이터입니다.\n"
+            "각 레포별로 \"지금 뭘 하고 있었는지\"를 한 줄(30자 이내)로 요약해주세요.\n"
+            "커밋 메시지, 세션 타이틀, 마지막 대화 내용을 종합해서 판단하세요.\n\n"
+            "출력 형식 (JSON만, 다른 텍스트 없이):\n"
+            "{\"repo_name\": \"요약\", ...}\n\n"
+            f"데이터:\n{json.dumps(payload, ensure_ascii=False)}"
+        )
+    else:
+        prompt = (
+            "The following JSON contains recent activity data from local Git repos.\n"
+            "Summarize what was being worked on for each repo in one line (max 50 chars).\n"
+            "Use commit messages, session titles, and last conversation to judge.\n\n"
+            "Output format (JSON only, no other text):\n"
+            "{\"repo_name\": \"summary\", ...}\n\n"
+            f"Data:\n{json.dumps(payload, ensure_ascii=False)}"
+        )
 
     try:
         result = sp.run(
@@ -467,16 +477,16 @@ def _call_llm(payload: list[dict]) -> dict[str, str]:
         return {}
 
 
-def get_llm_summaries(repos: list[dict]) -> dict[str, str]:
+def get_llm_summaries(repos: list[dict], lang: str = "en") -> dict[str, str]:
     """Get per-repo summaries with caching. Only calls LLM for changed repos."""
     cache = load_cache()
-    cached_summaries, uncached_repos = split_cached(repos, cache)
+    cached_summaries, uncached_repos = split_cached(repos, cache, lang=lang)
 
     # Call LLM only for uncached repos
     new_summaries = {}
     if uncached_repos:
         payload = build_llm_payload(uncached_repos)
-        new_summaries = _call_llm(payload)
+        new_summaries = _call_llm(payload, lang=lang)
 
     # Update cache with new results
     if new_summaries:
@@ -484,7 +494,7 @@ def get_llm_summaries(repos: list[dict]) -> dict[str, str]:
             name = repo["name"]
             if name in new_summaries:
                 cache[name] = {
-                    "key": compute_cache_key(repo),
+                    "key": compute_cache_key(repo, lang=lang),
                     "summary": new_summaries[name],
                 }
         save_cache(cache)
@@ -495,7 +505,7 @@ def get_llm_summaries(repos: list[dict]) -> dict[str, str]:
     if cached_summaries:
         cache_count = len(cached_summaries)
         new_count = len(new_summaries)
-        print(f"📋 캐시 {cache_count}개 / 새 분석 {new_count}개", file=sys.stderr)
+        print(f"📋 {STRINGS[lang]['cache_stats'].format(cached=cache_count, new=new_count)}", file=sys.stderr)
 
     return all_summaries
 
