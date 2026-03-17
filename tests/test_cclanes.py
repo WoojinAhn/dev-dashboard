@@ -427,6 +427,48 @@ def test_cache_key_includes_lang():
     assert key_en != key_ko
 
 
+# --- display_results tests ---
+
+def test_display_results_en(capsys):
+    """English table headers are used when lang=en."""
+    repos = [{
+        "name": "myrepo",
+        "git": {"branch": "main", "last_commit_msg": "fix", "dirty_count": 0,
+                "last_commit_date": datetime.now(tz=timezone.utc), "has_remote": True},
+        "claude": None,
+        "memo": None,
+        "last_activity": datetime.now(tz=timezone.utc),
+    }]
+    lately.display_results(repos, {"myrepo": "test summary"}, raw=False, lang="en")
+    output = capsys.readouterr().out
+    assert "Repo" in output
+    assert "Last Active" in output
+    assert "Summary" in output
+
+
+def test_display_results_ko(capsys):
+    """Korean table headers are used when lang=ko."""
+    repos = [{
+        "name": "myrepo",
+        "git": {"branch": "main", "last_commit_msg": "fix", "dirty_count": 0,
+                "last_commit_date": datetime.now(tz=timezone.utc), "has_remote": True},
+        "claude": None,
+        "memo": None,
+        "last_activity": datetime.now(tz=timezone.utc),
+    }]
+    lately.display_results(repos, {"myrepo": "test summary"}, raw=False, lang="ko")
+    output = capsys.readouterr().out
+    assert "레포" in output
+    assert "마지막 활동" in output
+
+
+def test_display_results_empty_en(capsys):
+    """No repos shows English empty message."""
+    lately.display_results([], {}, raw=False, lang="en")
+    output = capsys.readouterr().out
+    assert "No repos with recent activity." in output
+
+
 # --- Language detection tests ---
 
 def test_detect_lang_override_en():

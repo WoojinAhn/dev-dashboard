@@ -500,10 +500,11 @@ def get_llm_summaries(repos: list[dict]) -> dict[str, str]:
     return all_summaries
 
 
-def display_results(repos: list[dict], summaries: dict[str, str], raw: bool = False) -> None:
+def display_results(repos: list[dict], summaries: dict[str, str], raw: bool = False, lang: str = "en") -> None:
     """Print the formatted output table."""
+    s = STRINGS[lang]
     if not repos:
-        print("활동이 있는 레포가 없습니다.")
+        print(s["no_active_repos"])
         return
 
     now = datetime.now(tz=timezone.utc)
@@ -524,27 +525,27 @@ def display_results(repos: list[dict], summaries: dict[str, str], raw: bool = Fa
     if show_session:
         max_session = max(len(t) for t in session_titles.values())
         max_session = max(max_session, 4)
-        print(f"{'레포':<{max_name}}  {'마지막 활동':<12}  {'요약':<{max_summary}}  세션")
+        print(f"{s['col_repo']:<{max_name}}  {s['col_last_activity']:<12}  {s['col_summary']:<{max_summary}}  {s['col_session']}")
         print(f"{'─' * max_name}  {'─' * 12}  {'─' * max_summary}  {'─' * max_session}")
     else:
-        print(f"{'레포':<{max_name}}  {'마지막 활동':<12}  요약")
+        print(f"{s['col_repo']:<{max_name}}  {s['col_last_activity']:<12}  {s['col_summary']}")
         print(f"{'─' * max_name}  {'─' * 12}  {'─' * max_summary}")
 
     for repo in repos:
         name = repo["name"]
         if repo["last_activity"]:
-            time_str = format_relative_time(repo["last_activity"], now)
+            time_str = format_relative_time(repo["last_activity"], now, lang=lang)
         else:
             time_str = "-"
 
         if repo["memo"]:
             summary = f"[memo] {repo['memo']}"
         elif raw:
-            summary = build_raw_summary(repo)
+            summary = build_raw_summary(repo, lang=lang)
         elif name in summaries:
             summary = summaries[name]
         else:
-            summary = build_raw_summary(repo)
+            summary = build_raw_summary(repo, lang=lang)
 
         if show_session:
             session = session_titles.get(name, "")
