@@ -362,3 +362,32 @@ def test_split_cached_miss():
     cached, uncached = lately.split_cached(repos, cache)
     assert cached == {}
     assert len(uncached) == 1
+
+
+# --- Language detection tests ---
+
+def test_detect_lang_override_en():
+    """--lang en overrides system locale."""
+    args = lately.parse_args(["--lang", "en"])
+    assert lately.detect_lang(args) == "en"
+
+
+def test_detect_lang_override_ko():
+    """--lang ko overrides system locale."""
+    args = lately.parse_args(["--lang", "ko"])
+    assert lately.detect_lang(args) == "ko"
+
+
+def test_detect_lang_default_fallback(monkeypatch):
+    """No --lang and non-Korean locale falls back to en."""
+    monkeypatch.setenv("LANG", "en_US.UTF-8")
+    monkeypatch.setattr("locale.getlocale", lambda: ("en_US", "UTF-8"))
+    args = lately.parse_args([])
+    assert lately.detect_lang(args) == "en"
+
+
+def test_detect_lang_korean_locale(monkeypatch):
+    """Korean locale auto-detects ko."""
+    monkeypatch.setenv("LANG", "ko_KR.UTF-8")
+    args = lately.parse_args([])
+    assert lately.detect_lang(args) == "ko"

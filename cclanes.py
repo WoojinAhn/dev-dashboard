@@ -4,6 +4,8 @@
 import argparse
 import hashlib
 import json
+import locale
+import os
 import subprocess as sp
 import sys
 from datetime import datetime, timedelta, timezone
@@ -13,6 +15,71 @@ HOME_DIR = Path.home() / "home"
 CONFIG_PATH = Path.home() / ".cclanes" / "config.json"
 CACHE_PATH = Path.home() / ".cclanes" / "cache.json"
 CLAUDE_PROJECTS_DIR = Path.home() / ".claude" / "projects"
+
+STRINGS = {
+    "en": {
+        # Relative time
+        "just_now": "just now",
+        "minutes_ago": "{n}m ago",
+        "hours_ago": "{n}h ago",
+        "days_ago": "{n}d ago",
+        "weeks_ago": "{n}w ago",
+        "months_ago": "{n}mo ago",
+        # Table headers
+        "col_repo": "Repo",
+        "col_last_activity": "Last Active",
+        "col_summary": "Summary",
+        "col_session": "Session",
+        # Raw summary
+        "session_prefix": "session",
+        "commit_prefix": "commit",
+        "uncommitted": "{n} uncommitted",
+        "no_activity": "(no activity)",
+        # CLI messages
+        "excluded_added": "Added to exclude list: {repos}",
+        "excluded_removed": "Removed from exclude list: {repos}",
+        "memo_saved": "Memo saved: ~/home/{repo}/.cclanes",
+        "no_active_repos": "No repos with recent activity.",
+        "cache_stats": "cache {cached} / new {new}",
+    },
+    "ko": {
+        "just_now": "방금",
+        "minutes_ago": "{n}분 전",
+        "hours_ago": "{n}시간 전",
+        "days_ago": "{n}일 전",
+        "weeks_ago": "{n}주 전",
+        "months_ago": "{n}개월 전",
+        "col_repo": "레포",
+        "col_last_activity": "마지막 활동",
+        "col_summary": "요약",
+        "col_session": "세션",
+        "session_prefix": "세션",
+        "commit_prefix": "커밋",
+        "uncommitted": "미커밋 {n}개",
+        "no_activity": "(활동 없음)",
+        "excluded_added": "제외 목록에 추가됨: {repos}",
+        "excluded_removed": "제외 목록에서 제거됨: {repos}",
+        "memo_saved": "메모 저장됨: ~/home/{repo}/.cclanes",
+        "no_active_repos": "활동이 있는 레포가 없습니다.",
+        "cache_stats": "캐시 {cached}개 / 새 분석 {new}개",
+    },
+}
+
+
+def detect_lang(args: argparse.Namespace) -> str:
+    """Determine UI language from --lang flag or system locale."""
+    if args.lang:
+        return args.lang
+    lang_env = os.environ.get("LANG", "")
+    if lang_env.startswith("ko"):
+        return "ko"
+    try:
+        loc = locale.getlocale()[0]
+        if loc and loc.startswith("ko"):
+            return "ko"
+    except ValueError:
+        pass
+    return "en"
 
 
 def load_config(path: Path = CONFIG_PATH) -> dict:
@@ -441,8 +508,24 @@ def display_results(repos: list[dict], summaries: dict[str, str], raw: bool = Fa
     max_name = max(len(r["name"]) for r in repos)
     max_name = max(max_name, 4)
 
-    print(f"{'레포':<{max_name}}  {'마지막 활동':<12}  요약")
-    print(f"{'─' * max_name}  {'─' * 12}  {'─' * 40}")
+    # Collect session titles for the extra column
+    session_titles = {}
+    for repo in repos:
+        claude = repo.get("claude")
+        if claude and claude.get("custom_title"):
+            session_titles[repo["name"]] = claude["custom_title"]
+
+    show_session = bool(session_titles)
+    max_summary = 40
+
+    if show_session:
+        max_session = max(len(t) for t in session_titles.values())
+        max_session = max(max_session, 4)
+        print(f"{'레포':<{max_name}}  {'마지막 활동':<12}  {'요약':<{max_summary}}  세션")
+        print(f"{'─' * max_name}  {'─' * 12}  {'─' * max_summary}  {'─' * max_session}")
+    else:
+        print(f"{'레포':<{max_name}}  {'마지막 활동':<12}  요약")
+        print(f"{'─' * max_name}  {'─' * 12}  {'─' * max_summary}")
 
     for repo in repos:
         name = repo["name"]
@@ -460,7 +543,11 @@ def display_results(repos: list[dict], summaries: dict[str, str], raw: bool = Fa
         else:
             summary = build_raw_summary(repo)
 
-        print(f"{name:<{max_name}}  {time_str:<12}  {summary}")
+        if show_session:
+            session = session_titles.get(name, "")
+            print(f"{name:<{max_name}}  {time_str:<12}  {summary:<{max_summary}}  {session}")
+        else:
+            print(f"{name:<{max_name}}  {time_str:<12}  {summary}")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -478,6 +565,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="Permanently exclude repos (comma-separated)")
     parser.add_argument("--include", type=str,
                         help="Remove repos from permanent exclusion (comma-separated)")
+    parser.add_argument("--lang", choices=["en", "ko"], default=None,
+                        help="Output language (default: auto-detect from locale)")
     return parser.parse_args(argv)
 
 
