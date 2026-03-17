@@ -14,9 +14,11 @@ All user-facing strings in cclanes are hardcoded in Korean. As a public repo, th
 
 `detect_lang(args)` determines the active language code (`"en"` or `"ko"`):
 
-1. `--lang en/ko` flag (explicit override) — highest priority
-2. System locale (`locale.getdefaultlocale()` / `$LANG`) — if starts with `ko`, use `"ko"`
+1. `--lang en/ko` flag (explicit override, validated by `argparse choices=["en", "ko"]`) — highest priority
+2. System locale (`locale.getlocale()[0]` or `os.environ.get("LANG")`) — if starts with `ko`, use `"ko"`
 3. Fallback: `"en"`
+
+Note: `locale.getdefaultlocale()` is deprecated since Python 3.11. Use `locale.getlocale()` instead.
 
 Called once in `main()`, passed as `lang` parameter to downstream functions.
 
@@ -100,9 +102,16 @@ Not included in `STRINGS` — handled as a conditional block in `_call_llm` due 
 - LLM prompt and summary language (`_call_llm`)
 - Cache key computation (`compute_cache_key`)
 
-**Unchanged (English-fixed):**
-- stderr warnings (developer debugging)
+**Unchanged (convert to English, then keep fixed):**
+- stderr warnings — currently Korean, will be changed to English as a one-time fix (developer debugging messages, not user-facing)
 - Cache/config file structure (backward compatible)
+
+**Incidental bugfix:**
+- `--memo` output message currently says `.lately` but actual path is `.cclanes` — fixed by adopting the STRINGS dict value
+
+**CJK alignment:** Terminal column alignment with CJK characters (2-column width) is a pre-existing issue, out of scope for this change.
+
+**`cache_stats` message:** Although present in STRINGS, this is a stderr diagnostic message. It will use STRINGS for consistency since it's informational to the user (not a debug warning).
 
 ## Files to Modify
 
@@ -119,3 +128,4 @@ Not included in `STRINGS` — handled as a conditional block in `_call_llm` due 
 - `test_format_relative_time_en` — English relative time (`3h ago`, etc.)
 - `test_build_raw_summary_en` — English raw summary (`commit:`, `session:`, etc.)
 - `test_cache_key_includes_lang` — same repo, different lang → different cache key
+- `test_display_results_en` — English table headers in output
