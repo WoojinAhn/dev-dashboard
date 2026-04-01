@@ -149,6 +149,14 @@ def find_claude_session(projects_dir: Path, repo_name: str) -> Path | None:
     return None
 
 
+def _is_local_command(content) -> bool:
+    """Check if a user message content is a local command (e.g., /exit, /help)."""
+    if isinstance(content, str):
+        stripped = content.strip()
+        return stripped.startswith(("<local-command", "<command-name"))
+    return False
+
+
 def parse_claude_session(jsonl_path: Path) -> dict | None:
     """Parse a Claude Code session JSONL file.
 
@@ -174,6 +182,11 @@ def parse_claude_session(jsonl_path: Path) -> dict | None:
                 continue
 
             msg_type = obj.get("type")
+
+            if msg_type == "user":
+                content = obj.get("message", {}).get("content", "")
+                if _is_local_command(content):
+                    continue
 
             ts_str = obj.get("timestamp")
             if ts_str:
